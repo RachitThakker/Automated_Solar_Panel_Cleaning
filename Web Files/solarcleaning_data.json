@@ -1,5 +1,173 @@
 [
     {
+        "timestamp": "2021-05-31 18:31:36",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:31:35",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:31:25",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:31:15",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:31:05",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:25:23",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:25:13",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:25:02",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:24:52",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:04:14",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:04:04",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:03:53",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 18:03:43",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:51:48",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:51:38",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:51:28",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:51:18",
+        "temperature": "22",
+        "flowrate": "2096",
+        "pressure": "2.4",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:30:32",
+        "temperature": "23",
+        "flowrate": "1995",
+        "pressure": "2.9",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:30:22",
+        "temperature": "23",
+        "flowrate": "1995",
+        "pressure": "2.9",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:21:23",
+        "temperature": "23",
+        "flowrate": "1995",
+        "pressure": "2.9",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:21:13",
+        "temperature": "23",
+        "flowrate": "1995",
+        "pressure": "2.9",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:21:03",
+        "temperature": "23",
+        "flowrate": "1995",
+        "pressure": "2.9",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:20:53",
+        "temperature": "23",
+        "flowrate": "1995",
+        "pressure": "2.9",
+        "water_level": "123"
+    },
+    {
+        "timestamp": "2021-05-31 17:20:43",
+        "temperature": "23",
+        "flowrate": "1995",
+        "pressure": "2.9",
+        "water_level": "123"
+    },
+    {
         "timestamp": "2021-05-01 19:29:57",
         "temperature": "23",
         "flowrate": "1995",

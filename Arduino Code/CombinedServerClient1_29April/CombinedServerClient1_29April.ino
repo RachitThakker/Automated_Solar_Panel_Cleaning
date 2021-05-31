@@ -12,12 +12,14 @@ char serverName[] = "192.168.1.32"; // IP of server where database is stored
 int relay1 = 8, relay2 = 9;
 String readString; //used by server to capture GET request
 
-//////////////////////
+////
 
 void setup() {
 
-  pinMode(led1, OUTPUT); //pin selected to control
-  digitalWrite(led1, LOW);
+  pinMode(relay1, OUTPUT);
+  pinMode(relay2, OUTPUT); //pins selected to control
+  digitalWrite(relay1, LOW);
+  digitalWrite(relay2, LOW);
 
   Ethernet.begin(mac, ip);
   server.begin();
@@ -70,13 +72,14 @@ void loop() {
             client.println("  background-color: #f44336;\n  color: white;\n  padding: 14px 20px;\n  margin: 8px 0;\n  border:none;\n  cursor:pointer;\n  width: 60%;\n  height: 250px;");
             client.println("}");
             client.println("button: hover {");
-            client.println("  opacity: 0.8;");
+            client.println("  opacity: 0.3;");
             client.println("}");
             client.println("</style>");
             client.println("</head>");
             client.println("<body style=background-color:#222222>");
             client.println("<center>");
             client.println("<a href=\"/?button1on\"\"><button>BUTTON ON</button></a>");
+            client.println("<br><br><br>");
             client.println("<a href=\"/?button2off\"\"><button>BUTTON OFF</button></a>");
             client.println("</center>");
             client.println("</body>");
@@ -133,7 +136,7 @@ void SendData()   //CONNECTING WITH MYSQL
   client.stop();
   if (client.connect(serverName, 8080)) {
     Serial.println("connected");
-    delay(1000);
+    delay(10);
 
     //Call calc functions to calculate data
     float wl = calcWaterLevel();

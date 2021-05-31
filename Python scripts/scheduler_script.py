@@ -1,15 +1,30 @@
+''' IMPORTANT !!! PLEASE READ !!! '''
+# This script will command the Arduino board to turn ON
+# the relays at 4 AM everyday. For this, it must always be running.
+
+# This script must execute at Start-up automatically.
+# To do so, place this script in the location given below:
+
+# For Windows:
+# C:\Users\USER_NAME\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+
+# Make sure this file opens by python.exe IDE otherwise
+# it might open as a .py readable file.
+
 import urllib.request, urllib.parse, urllib.error
 import schedule, time, os
 
-url = "http://192.168.1.35/?button1on"
+url1 = "http://192.168.1.35/?button1on"
+url2 = "http://192.168.1.35/?button2off"
+print("Process ID: ", os.getpid(), "\n")
+
 def task():
-    print("Job function called.")
-    data = urllib.request.urlopen(url).read().decode()
-    print(data)
+    print("Scheduled function called.")
+    data = urllib.request.urlopen(url1)
     print("Process ID: ", os.getpid(), "\n")
 
-# schedule.every().day.at("04:00").do(task)
-schedule.every(3).seconds.do(task)
+schedule.every().day.at("04:00").do(task)
+# schedule.every(50).seconds.do(task)
 
 while True:
     schedule.run_pending()
