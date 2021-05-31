@@ -2,6 +2,9 @@
 # This script will command the Arduino board to turn ON
 # the relays at 4 AM everyday. For this, it must always be running.
 
+# It is necessary to install 'schedule' package for Python.
+# Use command 'pip install schedule' to do the same.
+
 # This script must execute at Start-up automatically.
 # To do so, place this script in the location given below:
 
