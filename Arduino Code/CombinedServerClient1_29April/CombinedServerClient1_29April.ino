@@ -71,8 +71,8 @@ void loop() {
             client.println("button {");
             client.println("  background-color: #f44336;\n  color: white;\n  padding: 14px 20px;\n  margin: 8px 0;\n  border:none;\n  cursor:pointer;\n  width: 60%;\n  height: 250px;");
             client.println("}");
-            client.println("button: hover {");
-            client.println("  opacity: 0.3;");
+            client.println("button:hover {");
+            client.println("  opacity: 0.5;");
             client.println("}");
             client.println("</style>");
             client.println("</head>");
