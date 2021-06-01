@@ -17,8 +17,8 @@
 import urllib.request, urllib.parse, urllib.error
 import schedule, time, os
 
-url1 = "http://192.168.1.35/?button1on"
-url2 = "http://192.168.1.35/?button2off"
+url1 = "http://192.168.103.35/?button1on"
+url2 = "http://192.168.103.35/?button2off"
 print("Process ID: ", os.getpid(), "\n")
 
 def task():
