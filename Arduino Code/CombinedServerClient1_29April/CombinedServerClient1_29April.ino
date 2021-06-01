@@ -1,37 +1,55 @@
-
 #include <SPI.h>
+#include <NewPing.h>
 #include <Ethernet.h>
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; //assign arduino mac address
-//byte ip[] = {192, 168, 103, 35 }; // ip in lan assigned to arduino
+byte ip[] = {192, 168, 103, 35 }; // ip in lan assigned to arduino
 
 EthernetServer server(80); //server port arduino server will use
 EthernetClient client;
 char serverName[] = "192.168.103.220"; // IP of server where database is stored
 
-int relay1 = 8, relay2 = 9;
-String readString; //used by server to capture GET request
+int relay1 = 2; // For Valve1
+int relay2 = 3; // For Valve2
+int relay3 = 4; // For Valve3
+int relay4 = 5; // For Valve4
+int relay5 = 6; // For DOL Stop Relay
+int relay6 = 7; // For DOL Start Relay
+int relay7 = 8;
 
-////
+#define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     11  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 400
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
+String readString; //used by server to capture GET request
 
 void setup() {
 
   pinMode(relay1, OUTPUT);
-  pinMode(relay2, OUTPUT); //pins selected to control
+  pinMode(relay2, OUTPUT);
+  pinMode(relay3, OUTPUT);
+  pinMode(relay4, OUTPUT);
+  pinMode(relay5, OUTPUT);
+  pinMode(relay6, OUTPUT);
+  pinMode(relay7, OUTPUT);
   digitalWrite(relay1, LOW);
   digitalWrite(relay2, LOW);
+  digitalWrite(relay3, LOW);
+  digitalWrite(relay4, LOW);
+  digitalWrite(relay5, LOW);
+  digitalWrite(relay6, LOW);
+  digitalWrite(relay7, LOW);
 
-  Ethernet.begin(mac);
+  Ethernet.begin(mac, ip);
   server.begin();
   Serial.begin(9600);
-  Serial.println(F("server/client 1.0 test 13/4/2021")); // keep track of what is loaded
-  Serial.println("Enter in your browser: "); //create client from your browser
-  Serial.println(Ethernet.localIP());
-  Serial.println(F("Press button ON to test client")); // what to do to test client
+  Serial.println("Enter " + Ethernet.localIP() + " in your browser"); //create client from your browser
 }
 
 void loop() {
-  
+
   EthernetClient client = server.available();
   if (client) {
     while (client.connected()) {
@@ -43,14 +61,12 @@ void loop() {
 
           //store characters to string
           readString += c;
-          //Serial.print(c);
         }
 
         //if HTTP request has ended
         if (c == '\n') {
 
-          ///////////////
-          Serial.print(readString); //print to serial monitor for debuging
+          Serial.print(readString); //print to serial monitor for debugging
 
           //now output HTML data header
           if (readString.indexOf('?') >= 0) { //don't send new page
@@ -62,7 +78,6 @@ void loop() {
             client.println("HTTP/1.1 200 OK");
             client.println("Content-Type: text/html");
             client.println("Connection: close");  // the connection will be closed after completion of the response
-            
             client.println();
             client.println("<!DOCTYPE HTML>");
             client.println("<html>");
@@ -72,9 +87,7 @@ void loop() {
             client.println("button {");
             client.println("  background-color: #f44336;\n  color: white;\n  padding: 14px 20px;\n  margin: 8px 0;\n  border:none;\n  cursor:pointer;\n  width: 60%;\n  height: 250px;");
             client.println("}");
-            client.println("button:hover {");
-            client.println("  opacity: 0.5;");
-            client.println("}");
+            client.println("button:hover {opacity: 0.5;}");
             client.println("</style>");
             client.println("</head>");
             client.println("<body style=background-color:#222222>");
@@ -91,15 +104,13 @@ void loop() {
           //stopping client
           client.stop();
 
-          ///////////////////// control arduino pin
-          if (readString.indexOf("?button1on") > 0) 
+          if (readString.indexOf("?button1on") > 0)
           {
-            if (calcWaterLevel() > 99)
+            if (sonar.ping_cm() > 99)
             {
               digitalWrite(relay1, HIGH);
               digitalWrite(relay2, HIGH);
               delay(5000);  // Delay to give valves time to open
-              client.println("<h4>Cleaning Started.</h4>");
               {
                 SendData();
                 delay(10000);
@@ -113,11 +124,10 @@ void loop() {
               SendData();
               delay(10000);
               digitalWrite(relay2, LOW);
-              client.println("<h4>Cleaning Finished.</h4>");
             }
           }
 
-          if (readString.indexOf("?button2off") > 0) 
+          if (readString.indexOf("?button2off") > 0)
           {
             digitalWrite(relay1, LOW);
             digitalWrite(relay2, LOW);
@@ -140,11 +150,11 @@ void SendData()   //CONNECTING WITH MYSQL
     delay(10);
 
     //Call calc functions to calculate data
-    float wl = calcWaterLevel();
+    float wl = sonar.ping_cm();
     float tp = calcTemp();
     float Pr = calcPressure();
     float Fl = calcFlowrate();
-    
+
     // Make a HTTP request:
     client.print("GET /solarcleaning/Solardata.php?flowrate=");     //YOUR URL
     client.print(Fl);
@@ -171,12 +181,6 @@ float calcTemp()
 {
   //Code to calculate temperature
   return 22;
-}
-
-float calcWaterLevel()
-{
-  //Code to calculate water level
-  return 123;
 }
 
 float calcPressure()
