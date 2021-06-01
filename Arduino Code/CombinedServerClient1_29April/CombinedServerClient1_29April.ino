@@ -3,11 +3,11 @@
 #include <Ethernet.h>
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; //assign arduino mac address
-byte ip[] = {192, 168, 1, 35 }; // ip in lan assigned to arduino
+//byte ip[] = {192, 168, 103, 35 }; // ip in lan assigned to arduino
 
 EthernetServer server(80); //server port arduino server will use
 EthernetClient client;
-char serverName[] = "192.168.1.32"; // IP of server where database is stored
+char serverName[] = "192.168.103.220"; // IP of server where database is stored
 
 int relay1 = 8, relay2 = 9;
 String readString; //used by server to capture GET request
@@ -21,11 +21,12 @@ void setup() {
   digitalWrite(relay1, LOW);
   digitalWrite(relay2, LOW);
 
-  Ethernet.begin(mac, ip);
+  Ethernet.begin(mac);
   server.begin();
   Serial.begin(9600);
   Serial.println(F("server/client 1.0 test 13/4/2021")); // keep track of what is loaded
-  Serial.println("Enter 192.168.1.35 in your browser"); //create client from your browser
+  Serial.println("Enter in your browser: "); //create client from your browser
+  Serial.println(Ethernet.localIP());
   Serial.println(F("Press button ON to test client")); // what to do to test client
 }
 
@@ -61,7 +62,7 @@ void loop() {
             client.println("HTTP/1.1 200 OK");
             client.println("Content-Type: text/html");
             client.println("Connection: close");  // the connection will be closed after completion of the response
-            //client.println("Refresh: 10");  // refresh the page automatically every 5 sec
+            
             client.println();
             client.println("<!DOCTYPE HTML>");
             client.println("<html>");
@@ -134,7 +135,7 @@ void loop() {
 void SendData()   //CONNECTING WITH MYSQL
 {
   client.stop();
-  if (client.connect(serverName, 8080)) {
+  if (client.connect(serverName, 80)) {
     Serial.println("connected");
     delay(10);
 
@@ -156,7 +157,7 @@ void SendData()   //CONNECTING WITH MYSQL
     client.print(" ");      //SPACE BEFORE HTTP/1.1
     client.print("HTTP/1.1");
     client.println();
-    client.println("Host: 192.168.1.32");
+    client.println("Host: 192.168.103.220");
     client.println("Connection: close");
     client.println();
   } else {
