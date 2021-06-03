@@ -1,6 +1,8 @@
 #include <SPI.h>
 #include <NewPing.h>
 #include <Ethernet.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; //assign arduino mac address
 byte ip[] = {192, 168, 103, 35 }; // ip in lan assigned to arduino
@@ -13,15 +15,24 @@ int relay1 = 2; // For Valve1
 int relay2 = 3; // For Valve2
 int relay3 = 4; // For Valve3
 int relay4 = 5; // For Valve4
-int relay5 = 6; // For DOL Stop Relay
-int relay6 = 7; // For DOL Start Relay
+int relay5 = 6; // For DOL Start Relay
+int relay6 = 7; // For DOL Stop Relay
 int relay7 = 8;
+#define ONE_WIRE_BUS 9
 
 #define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     11  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 400
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+
+// arrays to hold device address
+DeviceAddress insideThermometer;
 
 String readString; //used by server to capture GET request
 
@@ -45,6 +56,11 @@ void setup() {
   Ethernet.begin(mac, ip);
   server.begin();
   Serial.begin(9600);
+
+  sensors.begin();
+  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0");
+  sensors.setResolution(insideThermometer, 9);
+  
   Serial.print("Enter ");
   Serial.println(Ethernet.localIP());
   Serial.print(" in your browser");
@@ -56,6 +72,7 @@ void loop() {
   if (client) {
     while (client.connected()) {
       if (client.available()) {
+        sendTempNLevel();
         char c = client.read();
 
         //read char by char HTTP request
@@ -105,13 +122,18 @@ void loop() {
           delay(1);
           //stopping client
           client.stop();
-
+          
           if (readString.indexOf("?button1on") > 0)
           {
             if (sonar.ping_cm() > 99)
             {
-              digitalWrite(relay7, HIGH);
-              digitalWrite(relay2, HIGH);
+              digitalWrite(relay5, HIGH); // DOL Starter ACTIVATED
+              
+              digitalWrite(relay1, HIGH); // Open valve 1
+              {
+                  
+              }
+              
               delay(5000);  // Delay to give valves time to open
               {
                 SendData();
@@ -142,6 +164,35 @@ void loop() {
       }
     }
   }
+}
+
+void sendTempNLevel()
+{
+  client.stop();
+  if (client.connect(serverName, 80)) {
+    Serial.println("connected");
+
+    //Call calc functions to calculate data
+    float wl = sonar.ping_cm();
+    float tp = calcTemp();
+
+    // Make a HTTP request:
+    client.print("GET /solarcleaning/Solardata.php?temperature=");     //YOUR URL
+    client.print(tp);
+    client.print("&water_level=");
+    client.print(wl);
+    client.print(" ");      //SPACE BEFORE HTTP/1.1
+    client.print("HTTP/1.1");
+    client.println();
+    client.println("Host: 192.168.103.220");
+    client.println("Connection: close");
+    client.println();
+  } else {
+    // if you didn't get a connection to the server:
+    Serial.println("connection failed");
+  }
+  client.stop();
+  
 }
 
 void SendData()   //CONNECTING WITH MYSQL
@@ -182,7 +233,13 @@ void SendData()   //CONNECTING WITH MYSQL
 float calcTemp()
 {
   //Code to calculate temperature
-  return 22;
+  sensors.requestTemperatures(); // Send the command to get temperatures
+  float tempC = sensors.getTempC(deviceAddress);
+  if(tempC == DEVICE_DISCONNECTED_C) 
+  {
+    return -999;
+  }
+  return tempC;
 }
 
 float calcPressure()
