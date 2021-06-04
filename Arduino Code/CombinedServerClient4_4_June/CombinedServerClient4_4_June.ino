@@ -110,8 +110,8 @@ void loop() {
             client.println("<body style=background-color:#222222>");
             client.println("<center>");
             client.println("<a href=\"/?button1on\"\"><button>BUTTON ON</button></a>");
-//            client.println("<br><br><br>");
-//            client.println("<a href=\"/?button2off\"\"><button>BUTTON OFF</button></a>");
+            client.println("<br><br><br>");
+            client.println("<a href=\"/?button2off\"\"><button>BUTTON OFF</button></a>");
             client.println("</center>");
             client.println("</body>");
             client.println("</html>");
