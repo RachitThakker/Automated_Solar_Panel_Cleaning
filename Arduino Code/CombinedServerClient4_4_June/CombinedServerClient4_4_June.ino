@@ -11,13 +11,16 @@ EthernetServer server(80); //server port arduino server will use
 EthernetClient client;
 char serverName[] = "192.168.103.220"; // IP of server where database is stored
 
-int relay1 = 2; // For Valve1
+int relay1 = 4; // For Valve1
 int relay2 = 5; // For Valve2
-int relay3 = 4; // For Valve3
-int relay4 = 8; // For Valve4
-int relay5 = 6; // For DOL Start Relay
-int relay6 = 7; // For DOL Stop Relay
-//int relay7 = 8; 
+int relay3 = 6; // For Valve3
+int relay4 = 7; // For Valve4
+int relay5 = 3; // For DOL Start Relay
+int relay6 = 2; // For DOL Stop Relay
+
+//int flowIn = 8; // For Water Flow sensor 
+int manualButton = 10;
+
 #define ONE_WIRE_BUS 9
 
 #define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
@@ -44,6 +47,7 @@ void setup() {
   pinMode(relay4, OUTPUT);
   pinMode(relay5, OUTPUT);
   pinMode(relay6, OUTPUT);
+  pinMode(manualButton, INPUT);
 
   digitalWrite(relay1, HIGH);
   digitalWrite(relay2, HIGH);
@@ -109,9 +113,10 @@ void loop() {
             client.println("</head>");
             client.println("<body style=background-color:#222222>");
             client.println("<center>");
+            client.println("<h1 style='color:white'>Automated Solar Panel Cleaning</h1>");
             client.println("<a href=\"/?button1on\"\"><button>BUTTON ON</button></a>");
             client.println("<br><br><br>");
-            client.println("<a href=\"/?button2off\"\"><button>BUTTON OFF</button></a>");
+            client.println("<a href=\"/?button2off\"\"><button>MOTOR OFF</button></a>");
             client.println("</center>");
             client.println("</body>");
             client.println("</html>");
@@ -120,8 +125,9 @@ void loop() {
           delay(1);
           //stopping client
           client.stop();
-          
-          if (readString.indexOf("?button1on") > 0)
+
+          int buttonRead = digitalRead(manualButton);
+          if ((readString.indexOf("?button1on") > 0))
           {
             if (true)
             {
@@ -178,7 +184,8 @@ void loop() {
             }
           }
 
-          if (readString.indexOf("?button2off") > 0) //Emergency Turn OFF DOL
+          buttonRead = digitalRead(manualButton);
+          if ((readString.indexOf("?button2off") > 0)) // Turn OFF DOL
           {
             digitalWrite(relay6, LOW);
             delay(500);
@@ -201,12 +208,16 @@ void sendTempNLevel()
     Serial.println("connected");
 
     //Call calc functions to calculate data
-    float wl = 45;
+    float wl = sonar.ping_cm();
     float tp = calcTemp();
 
     // Make a HTTP request:
-    client.print("GET /solarcleaning/Solardata.php?temperature=");     //YOUR URL
+    client.print("GET /solarcleaning/Solardata.php?flowrate=");     //YOUR URL
+    client.print(0);
+    client.print("&temperature=");
     client.print(tp);
+    client.print("&pressure=");
+    client.print(0);
     client.print("&water_level=");
     client.print(wl);
     client.print(" ");      //SPACE BEFORE HTTP/1.1
@@ -231,8 +242,9 @@ void SendData()   //CONNECTING WITH MYSQL
     delay(10);
 
     //Call calc functions to calculate data
-//    float wl = sonar.ping_cm();
-    float wl = 45;
+    float wl = sonar.ping_cm();
+    Serial.println(wl);
+//    float wl = 45;
     float tp = calcTemp();
     float Pr = calcPressure();
     float Fl = calcFlowrate();
