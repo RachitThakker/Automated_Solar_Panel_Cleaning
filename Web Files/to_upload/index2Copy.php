@@ -1,21 +1,21 @@
 <?php
-//header("Refresh: 5");
-   include('session.php');
-   $host = "localhost";
-$username = "SolarCleaning";
-$pass = "Solar@31@2001";
-$con = mysqli_connect($host, $username, $pass, "solarcleaning");
-  $dbselect = mysqli_select_db($con, "sensor_data");
+header("Refresh: 5");
+$host = "localhost";
+$username = "asc_sc";
+$pass = "SolarLJ@1111";
+$con = mysqli_connect($host, $username, $pass, "id17010100_solarcleaning");
+$dbselect = mysqli_select_db($con, "sensor_data");
 
 $query="SELECT * FROM sensor_data ORDER BY timestamp DESC";
 $result=mysqli_query($con,$query);
 ?>
-<html>
 
-   <head>
-      <title>Welcome</title>
-	  <style>
-    /* Set a style for all buttons */
+<!DOCTYPE html>
+<html>
+	<head>
+		<title> Sensor data display on web</title>
+		<style>
+	  /* Set a style for all buttons */
 		button {
 			background-color: #0000FF;
 			color: white;
@@ -23,57 +23,62 @@ $result=mysqli_query($con,$query);
 			margin: 8px 0;
 			border: none;
 			cursor: pointer;
-			width: 10%;
-			height: 50px;
+			width: auto;
+			height: auto;
 		}
+
 
 		/* Add a hover effect for buttons */
 		button:hover {
 			opacity: 0.3;
 		}
 
-    #dloadjson {
-      width:auto;
-      height:auto;
-    }
-
-    #table-wrapper {
+		#table-wrapper {
 			position:relative;
 		}
-
 		#table-scroll {
 		  height:500px;
 		  overflow:auto;
+
 		}
 
-    #table-wrapper thead th {
-        position: sticky;
-        top: 0;
-      }
+		/*#table-wrapper table {
+		  width:70%;
+
+		}
+
+		#table-wrapper table thead th .text {
+		  position:absolute;
+		  top:-20px;
+		  z-index:2;
+		  height:20px;
+		  width:35%;
+		  border:1px solid red;
+		}*/
 
 		/*  style="width:500px; line-height:40px; background-color:#006400; color:white;" */
-		#sensordata {
+		#customers {
 		  font-family: Arial, Helvetica, sans-serif;
 		  border-collapse: collapse;
 		  width: 70%;
 		}
 
-		#sensordata td, #sensordata th {
+		#customers td, #customers th {
 		  border: 1px solid #ddd;
 		  padding: 8px;
 		}
 
-		#sensordata tr{
+		#customers tr{
 			text-align: center;
 		}
 
-		#sensordata tr:nth-child(even){
+		#customers tr:nth-child(even){
 			background-color: #f2f2f2;
 		}
 
-		#sensordata tr:hover {background-color: #ddd;}
+		/*#customers tr:hover {background-color: #ddd;}*/
 
-		#sensordata th {
+		#customers th {
 		  padding-top: 12px;
 		  padding-bottom: 12px;
 		  text-align: center;
@@ -81,20 +86,17 @@ $result=mysqli_query($con,$query);
 		  color: white;
 		}
 	  </style>
-   </head>
+	</head>
 
-   <body>
-      <h2 align="left">Welcome <?php echo $login_session; ?> (<a href = "logout.php">Sign Out</a>)</h2>
+	<body>
 
-	  <div align="center">
-      <h2>SENSOR DATA TABLE</h2>
-      <a href="sensor_data.json" download><button id="dloadjson">Download Data as JSON</button></a>
-    </div>
+		<h2 align="center" style="color:black;">Sensor data table</h2>
+		<div id="dljson" align="center"><a href="solarcleaning_data.json" download><button>Download Data as JSON</button></a></div>
 
-    <div id="table-wrapper">
-      <div id="table-scroll">
-		<table id="sensordata" align="center" border="1px">
-      <thead>
+		<div id="table-wrapper">
+		<div id="table-scroll">
+		<table id="customers" align="center" border="1px">
+		<thead>
 			<tr>
 				<th> Timestamp </th>
 				<th> Temperature</th>
@@ -102,8 +104,8 @@ $result=mysqli_query($con,$query);
 				<th> Pressure </th>
 				<th> Water Level </th>
 			</tr>
-    </thead>
-    <tbody>
+		</thead>
+		<tbody>
 		<?php
 			while($rows=mysqli_fetch_assoc($result))
 			{
@@ -118,14 +120,16 @@ $result=mysqli_query($con,$query);
 			</tr>
 		<?php
 			}
-      $fp = fopen('sensor_data.json', 'w');
+			$fp = fopen('solarcleaning_data.json', 'w');
 			fwrite($fp, json_encode($col, JSON_PRETTY_PRINT));
-			fclose($fp);	
-		?>
-  </tbody>
-		</table>
-  </div>
-</div>
-   </body>
+			fclose($fp);
 
+		?>
+		</tbody>
+		</table>
+		</div>
+		</div>
+
+	</body>
 </html>
+<!--?button1on-->
