@@ -89,7 +89,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     //    Serial.print((char)payload[i]);
     readStr += (char)payload[i];
   }
-  Serial.print(readStr);
+  Serial.println(readStr);
   if (readStr == "LED_ON")
   {
     digitalWrite(led13, HIGH);
@@ -113,6 +113,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(relay6, HIGH);
     digitalWrite(led13, LOW);
     client.publish(fromArduinoTopic, "MOTOROFF");
+  }
+  else if (readStr == "ARDUINO_THERE?")
+  {
+    client.publish(fromArduinoTopic, "Hello from Arduino!");
   }
 }
 
@@ -181,76 +185,81 @@ void beginCleaning()
   client.publish(fromArduinoTopic, "BEGINNING");
   if (true) //Condition to check water level is above threshold
   {
+    //Test cycle that lasts for 10 seconds
+    {
       digitalWrite(led13, HIGH);
       client.publish(fromArduinoTopic, "BEGAN");
       unsigned long timeMillis = millis();
       while (millis() <= timeMillis + 10000)
       {
         sendSensorDataToPi();
-        sendValveDataToPi(3,0);
-        delay(6000);
+        sendValveDataToPi(3, 0);
+        delay(2000);
       }
       digitalWrite(led13, LOW);
       client.publish(fromArduinoTopic, "MOTOROFF");
+    }
 
-//    digitalWrite(relay5, LOW); // DOL Starter ACTIVATED
-//    digitalWrite(relay1, LOW); // Open valve 1
-//    sendValveDataToPi(1, 1); // First parameter is valve number. Second parameter is Open='1' OR Close='0'.
-//    delay(2000); // Wait for 2 secs for pump to start properly
-//
-//    client.publish(fromArduinoTopic, "BEGAN");
-//
-//    unsigned long timeMillis = millis();
-//    while (millis() <= timeMillis + 28000) // Run loop for 28 secs
-//    {
-//      sendSensorDataToPi();
-//      delay(2000); // Send Pressure and Flowrate every 2 secs
-//    }
-//    digitalWrite(relay2, LOW); //Open valve 2, while valve 1 is still open
-//    sendValveDataToPi(2, 1);
-//    delay(2000);
-//    digitalWrite(relay1, HIGH); //Close valve 1
-//    sendValveDataToPi(1, 0);
-//
-//    timeMillis = millis();
-//    while (millis() <= timeMillis + 38000) // Run loop for 39 secs
-//    {
-//      sendSensorDataToPi();
-//      delay(2000); // Send Pressure and Flowrate every 2 secs
-//    }
-//    digitalWrite(relay3, LOW); //Open valve 3, while valve 2 is still open
-//    sendValveDataToPi(3, 1);
-//    delay(2000);
-//    digitalWrite(relay2, HIGH); // Close valve 2
-//    sendValveDataToPi(2, 0);
-//
-//    timeMillis = millis();
-//    while (millis() <= timeMillis + 28000) // Run loop for 29 secs
-//    {
-//      sendSensorDataToPi();
-//      delay(2000); // Send Pressure and Flowrate every 2 secs
-//    }
-//    digitalWrite(relay4, LOW); //Open valve 4, while valve 3 is still open
-//    sendValveDataToPi(4, 1);
-//    delay(2000);
-//    digitalWrite(relay3, HIGH); // Close valve 3
-//    sendValveDataToPi(3, 0);
-//
-//    timeMillis = millis();
-//    while (millis() <= timeMillis + 40000) //Run loop for 40 secs
-//    {
-//      sendSensorDataToPi();
-//      delay(2000); // Send Pressure and Flowrate every 2 secs
-//    }
-//    digitalWrite(relay6, LOW); // Activate DOL Stopper relay
-//    delay(500);
-//    digitalWrite(relay5, HIGH); //Deavtivate DOL Starter relay
-//    delay(1000);
-//    digitalWrite(relay4, HIGH); // Close valve 4
-//    sendValveDataToPi(4, 0);
-//    digitalWrite(relay6, HIGH); //Deavtivate DOL Stopper relay
-//    client.publish(fromArduinoTopic, "MOTOROFF");
+    //Original Cycle for production
+    /*{
+      digitalWrite(relay5, LOW); // DOL Starter ACTIVATED
+      digitalWrite(relay1, LOW); // Open valve 1
+      sendValveDataToPi(1, 1); // First parameter is valve number. Second parameter is Open='1' OR Close='0'.
+      delay(2000); // Wait for 2 secs for pump to start properly
 
+      client.publish(fromArduinoTopic, "BEGAN");
+
+      unsigned long timeMillis = millis();
+      while (millis() <= timeMillis + 28000) // Run loop for 28 secs
+      {
+        sendSensorDataToPi();
+        delay(2000); // Send Pressure and Flowrate every 2 secs
+      }
+      digitalWrite(relay2, LOW); //Open valve 2, while valve 1 is still open
+      sendValveDataToPi(2, 1);
+      delay(2000);
+      digitalWrite(relay1, HIGH); //Close valve 1
+      sendValveDataToPi(1, 0);
+
+      timeMillis = millis();
+      while (millis() <= timeMillis + 38000) // Run loop for 39 secs
+      {
+        sendSensorDataToPi();
+        delay(2000); // Send Pressure and Flowrate every 2 secs
+      }
+      digitalWrite(relay3, LOW); //Open valve 3, while valve 2 is still open
+      sendValveDataToPi(3, 1);
+      delay(2000);
+      digitalWrite(relay2, HIGH); // Close valve 2
+      sendValveDataToPi(2, 0);
+
+      timeMillis = millis();
+      while (millis() <= timeMillis + 28000) // Run loop for 29 secs
+      {
+        sendSensorDataToPi();
+        delay(2000); // Send Pressure and Flowrate every 2 secs
+      }
+      digitalWrite(relay4, LOW); //Open valve 4, while valve 3 is still open
+      sendValveDataToPi(4, 1);
+      delay(2000);
+      digitalWrite(relay3, HIGH); // Close valve 3
+      sendValveDataToPi(3, 0);
+
+      timeMillis = millis();
+      while (millis() <= timeMillis + 40000) //Run loop for 40 secs
+      {
+        sendSensorDataToPi();
+        delay(2000); // Send Pressure and Flowrate every 2 secs
+      }
+      digitalWrite(relay6, LOW); // Activate DOL Stopper relay
+      delay(500);
+      digitalWrite(relay5, HIGH); //Deavtivate DOL Starter relay
+      delay(1000);
+      digitalWrite(relay4, HIGH); // Close valve 4
+      sendValveDataToPi(4, 0);
+      digitalWrite(relay6, HIGH); //Deavtivate DOL Stopper relay
+      client.publish(fromArduinoTopic, "MOTOROFF");
+      }*/
   }
   client.publish(fromArduinoTopic, "FINISHED");
 }
@@ -291,11 +300,18 @@ int calcTds()
   return 112; //Placeholder value
 }
 
+unsigned long startTime = millis();
 void loop()
 {
   if (!client.connected()) {
     reconnect();
   }
-  
+
   client.loop();
+
+  if (int(millis() - startTime) % 20000 == 0 && (millis() - startTime) >= 20000)
+  {
+    Serial.println("Every 20 seconds.");
+    delay(1);
+  }
 }
