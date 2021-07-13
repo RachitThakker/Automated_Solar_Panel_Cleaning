@@ -21,6 +21,9 @@ int relay6 = 2; // For DOL Stop Relay
 //int flowIn = 8; // For Water Flow sensor
 int manualButton = 10;
 
+int tdsi;
+float pressure;
+
 #define ONE_WIRE_BUS 9
 
 #define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
@@ -127,10 +130,10 @@ void sendSensorDataToPi()
   //Convert values to string
   String wl = String(calcWaterLevel());
   String tp = String(calcTemp());
-  String Pr = String(calcPressure());
+  String Pr = String(pressure);
   String Fl = String(calcFlowrate());
-  String tds = String(calcTds());
-
+  String tds = String(tdsi);
+  
   //Defining the format of sending data
   //Initializing string to avoid unpredictable results
   String data = "temperature=";
@@ -260,8 +263,13 @@ void beginCleaning()
       digitalWrite(relay6, HIGH); //Deavtivate DOL Stopper relay
       client.publish(fromArduinoTopic, "MOTOROFF");
       }*/
+      client.publish(fromArduinoTopic, "FINISHED");
   }
-  client.publish(fromArduinoTopic, "FINISHED");
+  else
+  {
+    client.publish(fromArduinoTopic, "WATER_SUPPLY_INSUFFICIENT");
+  }
+  
 }
 
 float calcTemp()
@@ -285,7 +293,8 @@ int calcWaterLevel()
 float calcPressure()
 {
   //Code to calculate pressure
-  return 2.4; //Placeholder value
+  pressure = 2.2;
+  return pressure; //Placeholder value
 }
 
 int calcFlowrate()
@@ -297,7 +306,8 @@ int calcFlowrate()
 int calcTds()
 {
   //Code to calculate TDS number of water
-  return 112; //Placeholder value
+  tdsi = 119;
+  return tdsi; //Placeholder value
 }
 
 unsigned long startTime = millis();
@@ -312,6 +322,8 @@ void loop()
   if (int(millis() - startTime) % 20000 == 0 && (millis() - startTime) >= 20000)
   {
     Serial.println("Every 20 seconds.");
+    
+    
     delay(1);
   }
 }
