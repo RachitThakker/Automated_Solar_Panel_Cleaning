@@ -21,8 +21,8 @@ int relay6 = 2; // For DOL Stop Relay
 //int flowIn = 8; // For Water Flow sensor
 int manualButton = 10;
 
-int tdsi;
-float pressure;
+int tdsi=9999;
+float pressureg=9999;
 
 #define ONE_WIRE_BUS 9
 
@@ -124,21 +124,32 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 //Beginning of snippet
-void sendSensorDataToPi()
+void sendSensorDataToPi(bool every4Min)
 {
   //Call functions to read and calculate sensor data
   //Convert values to string
   String wl = String(calcWaterLevel());
   String tp = String(calcTemp());
-  String Pr = String(pressure);
   String Fl = String(calcFlowrate());
-  String tds = String(tdsi);
+  String Pr, tds;
+  
+  if(every4Min == false){
+    Pr = String(calcPressure());
+    tds = String(calcTds());
+  }
+
+  if(every4Min == true){
+    Pr = String(pressureg);
+    tds = String(tdsi);
+  }
   
   //Defining the format of sending data
   //Initializing string to avoid unpredictable results
   String data = "temperature=";
   data = data + tp + "&level=" + wl + "&flow=" + Fl + "&tds=" + tds + "&pressure=" + Pr + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
   unsigned int len = data.length() + 1;
+
+  Serial.println(data);
 
   //Create character array buffer to enter as parameter in 'client.publish' function
   char buf[len];
@@ -195,7 +206,7 @@ void beginCleaning()
       unsigned long timeMillis = millis();
       while (millis() <= timeMillis + 10000)
       {
-        sendSensorDataToPi();
+        sendSensorDataToPi(false);
         sendValveDataToPi(3, 0);
         delay(2000);
       }
@@ -215,7 +226,7 @@ void beginCleaning()
       unsigned long timeMillis = millis();
       while (millis() <= timeMillis + 28000) // Run loop for 28 secs
       {
-        sendSensorDataToPi();
+        sendSensorDataToPi(false);
         delay(2000); // Send Pressure and Flowrate every 2 secs
       }
       digitalWrite(relay2, LOW); //Open valve 2, while valve 1 is still open
@@ -227,7 +238,7 @@ void beginCleaning()
       timeMillis = millis();
       while (millis() <= timeMillis + 38000) // Run loop for 39 secs
       {
-        sendSensorDataToPi();
+        sendSensorDataToPi(false);
         delay(2000); // Send Pressure and Flowrate every 2 secs
       }
       digitalWrite(relay3, LOW); //Open valve 3, while valve 2 is still open
@@ -239,7 +250,7 @@ void beginCleaning()
       timeMillis = millis();
       while (millis() <= timeMillis + 28000) // Run loop for 29 secs
       {
-        sendSensorDataToPi();
+        sendSensorDataToPi(false);
         delay(2000); // Send Pressure and Flowrate every 2 secs
       }
       digitalWrite(relay4, LOW); //Open valve 4, while valve 3 is still open
@@ -251,7 +262,7 @@ void beginCleaning()
       timeMillis = millis();
       while (millis() <= timeMillis + 40000) //Run loop for 40 secs
       {
-        sendSensorDataToPi();
+        sendSensorDataToPi(false);
         delay(2000); // Send Pressure and Flowrate every 2 secs
       }
       digitalWrite(relay6, LOW); // Activate DOL Stopper relay
@@ -293,8 +304,8 @@ int calcWaterLevel()
 float calcPressure()
 {
   //Code to calculate pressure
-  pressure = 2.2;
-  return pressure; //Placeholder value
+  pressureg = 2.2;
+  return pressureg; //Placeholder value
 }
 
 int calcFlowrate()
@@ -321,9 +332,10 @@ void loop()
 
   if (int(millis() - startTime) % 20000 == 0 && (millis() - startTime) >= 20000)
   {
+    Serial.println();
+    sendSensorDataToPi(true);
     Serial.println("Every 20 seconds.");
-    
-    
+    Serial.println();
     delay(1);
   }
 }

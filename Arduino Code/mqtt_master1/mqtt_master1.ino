@@ -21,6 +21,9 @@ int relay6 = 2; // For DOL Stop Relay
 //int flowIn = 8; // For Water Flow sensor
 int manualButton = 10;
 
+int tdsi=-999;
+float pressureg=-999;
+
 #define ONE_WIRE_BUS 9
 
 #define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
@@ -50,7 +53,6 @@ void setup()
 {
   Serial.begin(57600);
 
-  pinMode(led, OUTPUT);
   pinMode(relay1, OUTPUT);
   pinMode(relay2, OUTPUT);
   pinMode(relay3, OUTPUT);
@@ -58,7 +60,7 @@ void setup()
   pinMode(relay5, OUTPUT);
   pinMode(relay6, OUTPUT);
   pinMode(manualButton, INPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(led, OUTPUT);
 
   digitalWrite(relay1, HIGH);
   digitalWrite(relay2, HIGH);
@@ -114,24 +116,39 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(relay6, HIGH);
     client.publish(fromArduinoTopic, "MOTOROFF");
   }
+  else if (readStr == "ARDUINO_THERE?")
+  {
+    client.publish(fromArduinoTopic, "Hello from Arduino!");
+  }
 }
 
 //Beginning of snippet
-void sendSensorDataToPi()
+void sendSensorDataToPi(bool every4Min)
 {
   //Call functions to read and calculate sensor data
   //Convert values to string
   String wl = String(calcWaterLevel());
   String tp = String(calcTemp());
-  String Pr = String(calcPressure());
   String Fl = String(calcFlowrate());
-  String tds = String(calcTds());
+  String Pr, tds;
+  
+  if(every4Min == false){
+    Pr = String(calcPressure());
+    tds = String(calcTds());
+  }
 
+  if(every4Min == true){
+    Pr = String(pressureg);
+    tds = String(tdsi);
+  }
+  
   //Defining the format of sending data
   //Initializing string to avoid unpredictable results
   String data = "temperature=";
   data = data + tp + "&level=" + wl + "&flow=" + Fl + "&tds=" + tds + "&pressure=" + Pr + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
   unsigned int len = data.length() + 1;
+
+  Serial.println(data);
 
   //Create character array buffer to enter as parameter in 'client.publish' function
   char buf[len];
@@ -191,7 +208,7 @@ void beginCleaning()
     unsigned long timeMillis = millis();
     while (millis() <= timeMillis + 28000) // Run loop for 28 secs
     {
-      sendSensorDataToPi();
+      sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
     }
     digitalWrite(relay2, LOW); //Open valve 2, while valve 1 is still open
@@ -203,7 +220,7 @@ void beginCleaning()
     timeMillis = millis();
     while (millis() <= timeMillis + 38000) // Run loop for 39 secs
     {
-      sendSensorDataToPi();
+      sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
     }
     digitalWrite(relay3, LOW); //Open valve 3, while valve 2 is still open
@@ -215,7 +232,7 @@ void beginCleaning()
     timeMillis = millis();
     while (millis() <= timeMillis + 28000) // Run loop for 29 secs
     {
-      sendSensorDataToPi();
+      sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
     }
     digitalWrite(relay4, LOW); //Open valve 4, while valve 3 is still open
@@ -227,7 +244,7 @@ void beginCleaning()
     timeMillis = millis();
     while (millis() <= timeMillis + 40000) //Run loop for 40 secs
     {
-      sendSensorDataToPi();
+      sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
     }
     digitalWrite(relay6, LOW); // Activate DOL Stopper relay
@@ -238,9 +255,12 @@ void beginCleaning()
     sendValveDataToPi(4, 0);
     digitalWrite(relay6, HIGH); //Deavtivate DOL Stopper relay
     client.publish(fromArduinoTopic, "MOTOROFF");
-
+    client.publish(fromArduinoTopic, "FINISHED");
   }
-  client.publish(fromArduinoTopic, "FINISHED");
+  else
+  {
+    client.publish(fromArduinoTopic, "WATER_SUPPLY_INSUFFICIENT");
+  }  
 }
 
 float calcTemp()
@@ -264,7 +284,8 @@ int calcWaterLevel()
 float calcPressure()
 {
   //Code to calculate pressure
-  return 2.4; //Placeholder value
+  pressureg = 2.2;
+  return pressureg; //Placeholder value
 }
 
 int calcFlowrate()
@@ -276,14 +297,25 @@ int calcFlowrate()
 int calcTds()
 {
   //Code to calculate TDS number of water
-  return 112; //Placeholder value
+  tdsi = 119;
+  return tdsi; //Placeholder value
 }
 
+unsigned long startTime = millis();
 void loop()
 {
   if (!client.connected()) {
     reconnect();
   }
-  
+
   client.loop();
+
+  if (int(millis() - startTime) % 240000 == 0 && (millis() - startTime) >= 240000)
+  {
+    Serial.println();
+    sendSensorDataToPi(true);
+    Serial.println("Every 4 minutes.");
+    Serial.println();
+    delay(1);
+  }
 }
