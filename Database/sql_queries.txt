@@ -1,0 +1,11 @@
+SELECT tds, lag(tds) over (ORDER BY ID) FROM sensordata
+
+SELECT t2.tds from sensordata t1, sensordata t2 WHERE t2.ID = t1.ID - 1
+
+SELECT t2.tds from sensordata t1, sensordata t2 WHERE t2.ID = t1.ID - 1 AND `t1`.`tds`=9999
+
+UPDATE `sensordata` SET `tds`=(SELECT t2.tds from sensordata t1, sensordata t2 WHERE t2.ID = t1.ID - 1 AND t1.tds=9999) WHERE tds=9999
+
+UPDATE `sensordata` SET `pressure`=(SELECT t2.pressure from sensordata t1, sensordata t2 WHERE t2.ID = t1.ID - 1 AND t1.pressure=9999) WHERE pressure=9999
+
+UPDATE `sensordata` SET `tds`=(SELECT t2.tds from sensordata t1, sensordata t2 WHERE t2.ID = t1.ID - 1 AND t1.tds=9999), `pressure`= (SELECT t2.pressure from sensordata t1, sensordata t2 WHERE t2.ID = t1.ID - 1 AND t1.pressure=9999) WHERE tds=9999 AND pressure=9999
