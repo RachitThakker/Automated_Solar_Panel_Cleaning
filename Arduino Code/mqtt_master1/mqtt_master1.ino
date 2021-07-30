@@ -120,6 +120,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
   {
     client.publish(fromArduinoTopic, "Hello from Arduino!");
   }
+  else if (readStr == "TURN_ON_MOTOR")
+  {
+    digitalWrite(relay5, LOW);
+    delay(500);
+    digitalWrite(relay5, HIGH);
+    client.publish(fromArduinoTopic, "MOTORON");
+  }
 }
 
 //Beginning of snippet
@@ -177,7 +184,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("arduinoClientljsc1111", username, password)) {
+    if (client.connect("arduinoClientljsc2222", username, password)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish(fromArduinoTopic, "Hello from Arduino!");
@@ -218,7 +225,7 @@ void beginCleaning()
     sendValveDataToPi(1, 0);
 
     timeMillis = millis();
-    while (millis() <= timeMillis + 38000) // Run loop for 39 secs
+    while (millis() <= timeMillis + 38000) // Run loop for 38 secs
     {
       sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
@@ -230,7 +237,7 @@ void beginCleaning()
     sendValveDataToPi(2, 0);
 
     timeMillis = millis();
-    while (millis() <= timeMillis + 28000) // Run loop for 29 secs
+    while (millis() <= timeMillis + 28000) // Run loop for 28 secs
     {
       sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
@@ -310,7 +317,7 @@ void loop()
 
   client.loop();
 
-  if (int(millis() - startTime) % 240000 == 0 && (millis() - startTime) >= 240000)
+  if ((millis() - startTime) % 240000 == 0)
   {
     Serial.println();
     sendSensorDataToPi(true);

@@ -42,8 +42,8 @@ DeviceAddress insideThermometer;
 
 EthernetClient ethClient;
 PubSubClient client(ethClient);
-char fromArduinoTopic[] = "ljsc1111/arduino/from";
-char toArduinoTopic[] = "ljsc1111/arduino/to";
+char fromArduinoTopic[] = "ljsc1111/arduino/test/from";
+char toArduinoTopic[] = "ljsc1111/arduino/test/to";
 char sensorTopic[] = "arduino/sensor";
 char valveTopic[] = "arduino/valve";
 char username[] = "mqtt@pi@user1";
