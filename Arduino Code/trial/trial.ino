@@ -9,31 +9,19 @@
 
 // Update these with values suitable for your network.
 byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-IPAddress ip(192, 168, 110, 45); //IP of this Arduino
+IPAddress ip(192, 168, 110, 35); //IP of this Arduino
 //IPAddress server(5, 196, 95, 208); // IP for "test.mosquitto.org"
 IPAddress server(192, 168, 110, 36); // IP of Raspberry Pi
 
 const int led = LED_BUILTIN;
-int relay6 = 8; // For DOL Stop Relay
-int relay5 = 3; // For DOL Start Relay
 int relay1 = 4; // For Valve1
 int relay2 = 5; // For Valve2
 int relay3 = 6; // For Valve3
 int relay4 = 7; // For Valve4
-int flowIn = 2; // For Water Flow sensor
-#define ONE_WIRE_BUS 9
+int relay5 = 3; // For DOL Start Relay
+int relay6 = 2; // For DOL Stop Relay
+int flowIn = 8; // For Water Flow sensor
 int manualButton = 10;
-#define ECHO_PIN     11  // TX Arduino pin tied to echo pin on the ultrasonic sensor.
-#define TRIGGER_PIN  12  // RX Arduino pin tied to trigger pin on the ultrasonic sensor.
-#define MAX_DISTANCE 400
-const int min1 = 8;
-const int max1 = 60;
-
-#define pressnum A0 // Arduino pin defined on pressure sensor
-#define tdsnum A1 // Arduino pin defined on tds sensor
-
-int tdsi = -999;
-float pressureg = -999;
 
 const float pressureZero =  100.4;
 const float pressureMax = 921.9;
@@ -41,17 +29,23 @@ const float maxPSI = 725.189;
 const int sensorreadDelay = 1000;
 const double bar = 0.0689476;
 float pressureValue = 0.0;
+double pressureg = 0.0;
 
+int tdsi = 0;
 float tempc1;
 
 GravityTDS gravityTds;
 
 volatile int flow_frequency; // Measures flow sensor pulses
 unsigned int l_min; // Calculated litres/hour
+//unsigned char 2 = 2; // Sensor Input
 
-unsigned long currentTimet;
-unsigned long cloopTimet;
-
+#define ONE_WIRE_BUS 9
+#define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     11  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 400
+#define pressnum A0; // Arduino pin defined on pressure sensor
+#define tdsnum A1; // Arduino pin defined on tds sensor
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
 OneWire oneWire(ONE_WIRE_BUS);
@@ -70,16 +64,14 @@ char sensorTopic[] = "arduino/sensor";
 char valveTopic[] = "arduino/valve";
 char username[] = "mqtt@pi@user1";
 char password[] = "user1@pi@123456";
-
 void flow () // Interrupt function
 {
   flow_frequency++;
 }
-
 void setup()
 {
-  Serial.begin(9600);
-
+  Serial.begin(57600);
+  
   pinMode(relay1, OUTPUT);
   pinMode(relay2, OUTPUT);
   pinMode(relay3, OUTPUT);
@@ -89,7 +81,7 @@ void setup()
   pinMode(manualButton, INPUT);
   pinMode(led, OUTPUT);
   pinMode(flowIn, INPUT);
-
+  
   digitalWrite(flowIn, HIGH);
   digitalWrite(relay1, HIGH);
   digitalWrite(relay2, HIGH);
@@ -105,26 +97,9 @@ void setup()
   // Allow the hardware to sort itself out
   delay(1500);
 
-  // locate devices on the bus
-  Serial.print("Locating devices...");
   sensors.begin();
-  Serial.print("Found ");
-  Serial.print(sensors.getDeviceCount(), DEC);
-  Serial.println(" devices.");
-
-  // report parasite power requirements
-  Serial.print("Parasite power is: ");
-  if (sensors.isParasitePowerMode()) Serial.println("ON");
-  else Serial.println("OFF");
   if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0");
-  // show the addresses we found on the bus
-  //  Serial.print("Device 0 Address: ");
-  //  printAddress(insideThermometer);
-  Serial.println();
   sensors.setResolution(insideThermometer, 9);
-  Serial.print("Device 0 Resolution: ");
-  Serial.print(sensors.getResolution(insideThermometer), DEC);
-  Serial.println();
 
   //gravity config to arduino and tds sensor
   gravityTds.setPin(tdsnum);
@@ -175,13 +150,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   {
     client.publish(fromArduinoTopic, "Hello from Arduino!");
   }
-  else if (readStr == "TURN_ON_MOTOR")
-  {
-    digitalWrite(relay5, LOW);
-    delay(500);
-    digitalWrite(relay5, HIGH);
-    client.publish(fromArduinoTopic, "MOTORON");
-  }
 }
 
 //Beginning of snippet
@@ -189,62 +157,28 @@ void sendSensorDataToPi(bool every4Min)
 {
   //Call functions to read and calculate sensor data
   //Convert values to string
-  int wl = calcWaterLevel();
-  float tp = calcTemp();
-  int Fl = calcFlowrate();
-  float Pr;
-  int tds;
+  String wl = String(calcWaterLevel());
+  String tp = String(calcTemp());
+  String Fl = String(calcFlowrate());
+  String Pr, tds;
 
   if (every4Min == false) {
-    Pr = calcPressure();
-    tds = calcTds();
+    Pr = String(calcPressure());
+    tds = String(calcTds());
   }
 
   if (every4Min == true) {
-    Pr = pressureg;
-    tds = tdsi;
+    Pr = String(pressureg);
+    tds = String(tdsi);
   }
-
-  String wl1 = String(wl);
-  String Fl1 = String(Fl);
-  String tp1 = String(tp);
-  String Pr1 = String(Pr);
-  String tds1 = String(tds);
-
-  char wl2[150], Fl2[150], tp2[150], Pr2[150], tds2[150];
-  wl1.toCharArray(wl2, 150);
-  Fl1.toCharArray(Fl2, 150);
-  tp1.toCharArray(tp2, 150);
-  Pr1.toCharArray(Pr2, 150);
-  tds1.toCharArray(tds2, 150);
 
   //Defining the format of sending data
   //Initializing string to avoid unpredictable results
-  char data[150] = "temperature=";
-  data = data + tp2 + "&level=" + wl2 + "&flow=" + Fl2 + "&tds=" + tds2 + "&pressure=" + Pr2 + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
-
-//  data = data + tp;
-//  Serial.println(data);
-//
-//  data = data + "&level=" + wl;
-//  Serial.println(data);
-//
-//  data = data + "&flow=" + Fl;
-//  Serial.println(data);
-//
-//  data = data + "&tds=" + tds;
-//  Serial.println(data);
-//
-//  String data2 = data;
-//
-//  data2 = data2 + "&pressure=" + Pr;
-//  Serial.println(data2);
-//
-//  String data3 = data2 + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
-//  Serial.println(data3);
-//
-//  Serial.println(data3);
+  String data = "temperature=";
+  data = data + tp + "&level=" + wl + "&flow=" + Fl + "&tds=" + tds + "&pressure=" + Pr + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
   unsigned int len = data.length() + 1;
+
+  Serial.println(data);
 
   //Create character array buffer to enter as parameter in 'client.publish' function
   char buf[len];
@@ -273,7 +207,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("arduinoClientljsc2222", username, password)) {
+    if (client.connect("arduinoClientljsc1111", username, password)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish(fromArduinoTopic, "Hello from Arduino!");
@@ -314,7 +248,7 @@ void beginCleaning()
     sendValveDataToPi(1, 0);
 
     timeMillis = millis();
-    while (millis() <= timeMillis + 38000) // Run loop for 38 secs
+    while (millis() <= timeMillis + 38000) // Run loop for 39 secs
     {
       sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
@@ -326,7 +260,7 @@ void beginCleaning()
     sendValveDataToPi(2, 0);
 
     timeMillis = millis();
-    while (millis() <= timeMillis + 28000) // Run loop for 28 secs
+    while (millis() <= timeMillis + 28000) // Run loop for 29 secs
     {
       sendSensorDataToPi(false);
       delay(2000); // Send Pressure and Flowrate every 2 secs
@@ -363,24 +297,19 @@ float calcTemp()
 {
   //Code to calculate temperature
   sensors.requestTemperatures(); // Send the command to get temperatures
-  float tempC = sensors.getTempC(insideThermometer);
+  float tempC = sensors.getTempC(deviceAddress);
   tempc1 = tempC;
   if (tempC == DEVICE_DISCONNECTED_C)
   {
-    return -999;
+    return 0;
   }
-
   return tempC;
 }
 
 int calcWaterLevel()
 {
   //Code to calculate water level
-  int ct = sonar.ping_cm();
-  float dt = (ct * 0.3937 - min1) / (max1 - min1);
-  dt = dt * 100;
-
-  return dt;
+  return 98; //Placeholder value
 }
 
 float calcPressure()
@@ -395,13 +324,13 @@ float calcPressure()
   //Serial.print(barvalue);
   //Serial.println("  bar");
   //delay(sensorreadDelay);
-  return (pressureValue * bar);
+  return pressureg;
 }
 
 int calcFlowrate()
 {
   //Code to calculate water flow rate
-  l_min = (flow_frequency / 29); // (Pulse frequency x 60 min) / 7.5Q = flowrate in L/hour
+  l_min = (flow_frequency / 7.5); // (Pulse frequency x 60 min) / 7.5Q = flowrate in L/hour
   flow_frequency = 0; // Reset Counter
   //Serial.print(l_min, DEC); // Print litres/minute
   //Serial.println(" L/minute");
@@ -416,7 +345,7 @@ int calcTds()
   tdsi = gravityTds.getTdsValue();  // then get the value
   //Serial.print(tdsValue,0);
   //Serial.println("ppm");
-  return tdsi;
+  return tdsi; //Placeholder value
 }
 
 unsigned long startTime = millis();
@@ -428,7 +357,7 @@ void loop()
 
   client.loop();
 
-  if ((millis() - startTime) % 240000 == 0)
+  if (int((millis() - startTime) % 240000 == 0 && (millis() - startTime) >= 240000))
   {
     Serial.println();
     sendSensorDataToPi(true);
