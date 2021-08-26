@@ -1,3 +1,4 @@
+#include <string.h>
 #include <SPI.h>
 #include <NewPing.h>
 #include <Ethernet.h>
@@ -10,7 +11,6 @@
 // Update these with values suitable for your network.
 byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
 IPAddress ip(192, 168, 110, 45); //IP of this Arduino
-//IPAddress server(5, 196, 95, 208); // IP for "test.mosquitto.org"
 IPAddress server(192, 168, 110, 36); // IP of Raspberry Pi
 
 const int led = LED_BUILTIN;
@@ -26,8 +26,6 @@ int manualButton = 10;
 #define ECHO_PIN     11  // TX Arduino pin tied to echo pin on the ultrasonic sensor.
 #define TRIGGER_PIN  12  // RX Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define MAX_DISTANCE 400
-const int min1 = 8;
-const int max1 = 60;
 
 #define pressnum A0 // Arduino pin defined on pressure sensor
 #define tdsnum A1 // Arduino pin defined on tds sensor
@@ -35,22 +33,12 @@ const int max1 = 60;
 int tdsi = -999;
 float pressureg = -999;
 
-const float pressureZero =  100.4;
-const float pressureMax = 921.9;
-const float maxPSI = 725.189;
-const int sensorreadDelay = 1000;
-const double bar = 0.0689476;
-float pressureValue = 0.0;
-
 float tempc1;
 
 GravityTDS gravityTds;
 
 volatile int flow_frequency; // Measures flow sensor pulses
 unsigned int l_min; // Calculated litres/hour
-
-unsigned long currentTimet;
-unsigned long cloopTimet;
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
@@ -211,47 +199,38 @@ void sendSensorDataToPi(bool every4Min)
   String Pr1 = String(Pr);
   String tds1 = String(tds);
 
-  char wl2[150], Fl2[150], tp2[150], Pr2[150], tds2[150];
-  wl1.toCharArray(wl2, 150);
-  Fl1.toCharArray(Fl2, 150);
-  tp1.toCharArray(tp2, 150);
-  Pr1.toCharArray(Pr2, 150);
-  tds1.toCharArray(tds2, 150);
+  char wl2[10], Fl2[10], tp2[10], Pr2[10], tds2[10];
+  wl1.toCharArray(wl2, 10);
+  Fl1.toCharArray(Fl2, 10);
+  tp1.toCharArray(tp2, 10);
+  Pr1.toCharArray(Pr2, 10);
+  tds1.toCharArray(tds2, 10);
 
   //Defining the format of sending data
   //Initializing string to avoid unpredictable results
-  char data[150] = "temperature=";
-  data = data + tp2 + "&level=" + wl2 + "&flow=" + Fl2 + "&tds=" + tds2 + "&pressure=" + Pr2 + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
+  char data[200] = "temperature=";
+  strcat(data, tp2);
+  strcat(data, "&level=");
+  strcat(data, wl2);
+  strcat(data, "&flow=");
+  strcat(data, Fl2);
+  strcat(data, "&tds=");
+  strcat(data, tds2);
+  strcat(data, "&pressure=");
+  strcat(data, Pr2);
+  strcat(data, "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0");
 
-//  data = data + tp;
-//  Serial.println(data);
-//
-//  data = data + "&level=" + wl;
-//  Serial.println(data);
-//
-//  data = data + "&flow=" + Fl;
-//  Serial.println(data);
-//
-//  data = data + "&tds=" + tds;
-//  Serial.println(data);
-//
-//  String data2 = data;
-//
-//  data2 = data2 + "&pressure=" + Pr;
-//  Serial.println(data2);
-//
-//  String data3 = data2 + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
-//  Serial.println(data3);
-//
-//  Serial.println(data3);
-  unsigned int len = data.length() + 1;
+  // data = data + tp2 + "&level=" + wl2 + "&flow=" + Fl2 + "&tds=" + tds2 + "&pressure=" + Pr2 + "&endpressurevalve1=0&endpressurevalve2=0&endpressurevalve3=0&endpressurevalve4=0";
+
+  // unsigned int len = strlen(data) + 1;
 
   //Create character array buffer to enter as parameter in 'client.publish' function
-  char buf[len];
-  data.toCharArray(buf, len);
+  // char buf[len];
+  // data.toCharArray(buf, len);
 
   //Publish data to Raspberry Pi via MQTT Client named 'client'
-  client.publish(sensorTopic, buf);
+  Serial.println(data);
+  client.publish(sensorTopic, data);
 }
 //End of snippet
 
@@ -376,6 +355,8 @@ float calcTemp()
 int calcWaterLevel()
 {
   //Code to calculate water level
+  const int min1 = 8;
+  const int max1 = 60;
   int ct = sonar.ping_cm();
   float dt = (ct * 0.3937 - min1) / (max1 - min1);
   dt = dt * 100;
@@ -386,6 +367,12 @@ int calcWaterLevel()
 float calcPressure()
 {
   //Code to calculate pressure
+  const float pressureZero =  100.4;
+  const float pressureMax = 921.9;
+  const float maxPSI = 725.189;
+  const int sensorreadDelay = 1000;
+  const double bar = 0.0689476;
+  float pressureValue = 0.0;
   pressureValue = analogRead(pressnum);
   pressureValue = ((pressureValue - pressureZero) * maxPSI) / (pressureMax - pressureZero); //conversion equation to convert analog reading to psi
   //Serial.println(putvalue);
